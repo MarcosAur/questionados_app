@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+import 'package:perguntas_app/views/home.dart';
 import 'package:perguntas_app/views/questionnaire.dart';
 import 'package:perguntas_app/views/result.dart';
 
@@ -10,39 +14,55 @@ class _PerguntaAppState extends State<_PerguntaApp> {
   
   int counter = 0;
   int totalScore = 0;
+  bool startedGame = false;
+  var client = Client();
 
-  final List<Map<String, List>> questionsReplies = [
-    {
-      'text': ['Qual sua cor favorita?'],
-      'replies': [
-        ['Azul', true], 
-        ['Amarelo', false], 
-        ['Verde', false]
-      ]
-    },
-    {
-      'text': ['Qual sua comida favorita?'],
-      'replies': [
-        ['Lasanha', false],
-        ['Hamburguer', true],
-        ['Cuscuz', false],
-        ]
-    },
-    {
-      'text': ['Qual sue filme favorito?'],
-      'replies': [
-        ['Ironman', true],
-        ['Capitão América', false],
-        ['Para todos os garotos que já amei', false],
-      ]
-    },
-  ];
+  @override
+  @protected
+  @mustCallSuper
+  void initState() {
+    getQuestions();
+    super.initState();
+  }
 
-  void resetApplication(){
+  final List<Map<String, List>> questionsReplies = [];
+
+  getQuestions() async {
+    try{
+      var response = await client.get(Uri(scheme:'http', host:'192.168.1.76', port:8080, path:'/questions/find-all'),headers: {
+      'Accept': 'application/json'
+    });
+      var decodedResponse = jsonDecode(utf8.decode(response.bodyBytes)) as List;
+
+      questionsReplies.clear();
+
+      decodedResponse.forEach((question) { 
+        questionsReplies.add({
+          'text' : [question['name']],
+          'replies': question['replies']
+        });
+      });
+
+    } catch (e){
+      print('Erro na requisição');
+      print(e);
+    }
+  }
+
+  void startGame(){
     setState(() {
+      startedGame = true;
+    });
+  }
+
+   void resetApplication() {
+    setState((){
       totalScore = 0;
       counter = 0; 
+      startedGame = false;
+      getQuestions();
     });
+
   }
 
   void replyQuestion(bool isCorrect) {
@@ -63,14 +83,17 @@ class _PerguntaAppState extends State<_PerguntaApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Perguntados',
+        title: 'Projeto Simulado ENADE',
         home: Scaffold(
           appBar: AppBar(
-            title: Text('Aplicativo de Perguntas'),
+            title: Text('Projeto Simulado ENADE'),
           ),
-          body: hasNextQuestion()
-              ? Questionnaire(questionsReplies[counter], replyQuestion)
-              : Result(totalScore, resetApplication),
+          body: Center(
+          child: startedGame
+              ? hasNextQuestion() ? Questionnaire(questionsReplies[counter], replyQuestion) : Result(totalScore, resetApplication)
+              : Home(startGame)
+          )
+              
         ));
   }
 }

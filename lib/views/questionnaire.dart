@@ -19,16 +19,7 @@ class Questionnaire extends StatelessWidget {
         widgetsList.add(Question(question.value[0].toString()));
       } else {
         for (var reply in question.value) {
-
-          widgetsList.add(Reply(_replyQuestion, reply[0].toString(), reply[1]));
-
-          // if (reply[1]){
-          //   widgetsList.add(Reply(_replyQuestion, reply[0].toString()));
-          // }else{
-          //   widgetsList.add(Reply(_replyQuestionIncorrect, reply[0].toString()));
-          // }
-
-          
+          widgetsList.add(Reply(_replyQuestion, reply['text'].toString(), reply['correct']));  
         }
       }
     }
@@ -39,6 +30,7 @@ class Questionnaire extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: generateWidgets(),
     );
   }
