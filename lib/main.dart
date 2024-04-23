@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:perguntas_app/services/questionService.dart';
 import 'package:perguntas_app/views/home.dart';
 import 'package:perguntas_app/views/questionnaire.dart';
 import 'package:perguntas_app/views/result.dart';
@@ -15,7 +16,7 @@ class _PerguntaAppState extends State<_PerguntaApp> {
   int counter = 0;
   int totalScore = 0;
   bool startedGame = false;
-  var client = Client();
+
 
   @override
   @protected
@@ -25,28 +26,10 @@ class _PerguntaAppState extends State<_PerguntaApp> {
     super.initState();
   }
 
-  final List<Map<String, List>> questionsReplies = [];
+  List<Map<String, List>> questionsReplies = [];
 
   getQuestions() async {
-    try{
-      var response = await client.get(Uri(scheme:'http', host:'192.168.1.76', port:8080, path:'/questions/find-all'),headers: {
-      'Accept': 'application/json'
-    });
-      var decodedResponse = jsonDecode(utf8.decode(response.bodyBytes)) as List;
-
-      questionsReplies.clear();
-
-      decodedResponse.forEach((question) { 
-        questionsReplies.add({
-          'text' : [question['name']],
-          'replies': question['replies']
-        });
-      });
-
-    } catch (e){
-      print('Erro na requisição');
-      print(e);
-    }
+    questionsReplies = await QuestionService().run();
   }
 
   void startGame(){
@@ -82,6 +65,7 @@ class _PerguntaAppState extends State<_PerguntaApp> {
 
   @override
   Widget build(BuildContext context) {
+    print(questionsReplies);
     return MaterialApp(
         title: 'Projeto Simulado ENADE',
         home: Scaffold(
